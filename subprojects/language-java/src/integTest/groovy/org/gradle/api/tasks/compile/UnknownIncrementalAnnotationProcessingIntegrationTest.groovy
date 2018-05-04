@@ -22,7 +22,7 @@ class UnknownIncrementalAnnotationProcessingIntegrationTest extends AbstractIncr
 
     @Override
     def setup() {
-        withProcessor(new NonIncrementalProcessorFixture())
+        withProcessor(new NonIncrementalProcessorFixture(true, true, true))
     }
 
     def "all sources are recompiled when any class changes"() {

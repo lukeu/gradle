@@ -31,8 +31,15 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class NonIncrementalProcessorFixture extends AnnotationProcessorFixture {
 
-    NonIncrementalProcessorFixture() {
+    private final boolean providesNoOriginatingElements
+    private final boolean readsResources
+    private final boolean writesResources
+
+    NonIncrementalProcessorFixture(boolean providesNoOriginatingElements, boolean readsResources, boolean writesResources) {
         super("Thing")
+        this.writesResources = writesResources
+        this.readsResources = readsResources
+        this.providesNoOriginatingElements = providesNoOriginatingElements
     }
 
     String getGeneratorCode() {
@@ -41,7 +48,7 @@ for (Element element : elements) {
     TypeElement typeElement = (TypeElement) element;
     String className = typeElement.getSimpleName().toString() + "Thing";
     try {
-        JavaFileObject sourceFile = filer.createSourceFile(className);
+        JavaFileObject sourceFile = filer.createSourceFile(className${providesNoOriginatingElements ? "" : ", element"});
         Writer writer = sourceFile.openWriter();
         try {
             writer.write("class " + className + " {");
@@ -56,9 +63,9 @@ for (Element element : elements) {
         messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate source file " + className);
     }
     try {
-        filer.getResource(StandardLocation.SOURCE_OUTPUT, "", "thing.txt");
-        filer.createResource(StandardLocation.SOURCE_OUTPUT, "", "thing.txt");
-    } catch (IOException e) {
+        ${readsResources ? 'filer.getResource(StandardLocation.SOURCE_OUTPUT, "", "thing.txt");' : ""}
+        ${writesResources ? 'filer.createResource(StandardLocation.SOURCE_OUTPUT, "", "thing.txt");' : ""}
+    } catch (Exception e) {
         messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate resource file thing.txt");
     }
 }
