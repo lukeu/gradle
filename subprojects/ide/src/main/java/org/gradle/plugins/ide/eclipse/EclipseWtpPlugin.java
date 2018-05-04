@@ -27,6 +27,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.War;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.plugins.ear.Ear;
@@ -77,11 +78,31 @@ public class EclipseWtpPlugin extends IdePlugin {
         EclipseModel model = project.getExtensions().getByType(EclipseModel.class);
         model.setWtp(instantiator.newInstance(EclipseWtp.class));
 
-        getLifecycleTask().setDescription("Generates Eclipse wtp configuration files.");
-        getCleanTask().setDescription("Cleans Eclipse wtp configuration files.");
+        getLifecycleTask().configure(new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                task.setDescription("Generates Eclipse wtp configuration files.");
+            }
+        });
+        getCleanTask().configure(new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                task.setDescription("Cleans Eclipse wtp configuration files.");
+            }
+        });
 
-        project.getTasks().getByName(EclipsePlugin.ECLIPSE_TASK_NAME).dependsOn(getLifecycleTask());
-        project.getTasks().getByName(cleanName(EclipsePlugin.ECLIPSE_TASK_NAME)).dependsOn(getCleanTask());
+        project.getTasks().getByNameLater(Task.class, EclipsePlugin.ECLIPSE_TASK_NAME).configure(new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                task.dependsOn(getLifecycleTask());
+            }
+        });
+        project.getTasks().getByNameLater(Task.class, cleanName(EclipsePlugin.ECLIPSE_TASK_NAME)).configure(new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                task.dependsOn(getCleanTask());
+            }
+        });
 
         configureEclipseProject(project);
         configureEclipseWtpComponent(project, model);
@@ -323,8 +344,8 @@ public class EclipseWtpPlugin extends IdePlugin {
 
         }
 
-        T task = project.getTasks().create(taskName, taskType);
-        action.execute(task);
+        TaskProvider<T> task = project.getTasks().createLater(taskName, taskType);
+//        action.execute(task);
         plugin.addWorker(task);
     }
 
