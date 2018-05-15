@@ -32,6 +32,7 @@ import org.gradle.plugins.ear.EarPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin
 import org.gradle.plugins.ide.eclipse.EclipseWtpPlugin
 import org.gradle.plugins.ide.eclipse.model.BuildCommand
+import org.gradle.plugins.ide.eclipse.model.EclipseProject
 import org.gradle.plugins.ide.internal.tooling.EclipseModelBuilder
 import org.gradle.plugins.ide.internal.tooling.GradleProjectBuilder
 import org.gradle.test.fixtures.AbstractProjectBuilderSpec
@@ -64,6 +65,20 @@ class EclipseModelBuilderTest extends AbstractProjectBuilderSpec {
 
         then:
         eclipseModel.projectNatures.collect { it.id } == ['nature.a', 'nature.b']
+    }
+
+    def "can modify natures before and after merging"() {
+        setup:
+        project.eclipse.project.natures = ['nature.a']
+        project.eclipse.project.file.beforeMerged { it.natures += 'nature.b' }
+        project.eclipse.project.file.whenMerged { it.natures += 'nature.c' }
+        def modelBuilder = createEclipseModelBuilder()
+
+        when:
+        def eclipseModel = modelBuilder.buildAll("org.gradle.tooling.model.eclipse.EclipseProject", project)
+
+        then:
+        eclipseModel.projectNatures.collect { it.id } == ['nature.b', 'nature.a', 'nature.c']
     }
 
     def "nature list independent from project hierarchy"() {
