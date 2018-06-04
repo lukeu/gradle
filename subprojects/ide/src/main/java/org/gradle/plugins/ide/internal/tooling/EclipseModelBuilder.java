@@ -206,7 +206,6 @@ public class EclipseModelBuilder implements ToolingModelBuilder {
         eclipseProject.setClasspathContainers(classpathContainers);
         eclipseProject.setOutputLocation(outputLocation != null ? outputLocation : new DefaultEclipseOutputLocation("bin"));
 
-        // The new Project means 'beforeMerged' won't get to see any previous state from the .project file.
         org.gradle.plugins.ide.eclipse.model.Project xmlProject = new org.gradle.plugins.ide.eclipse.model.Project(new XmlTransformer());
 
         XmlFileContentMerger projectFile = eclipseModel.getProject().getFile();
